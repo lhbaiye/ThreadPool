@@ -149,7 +149,7 @@ void ThreadPool::threadFunc(int threadId)
 
             // 超过initThreadSize_的线程数量需要回收
             // 当前时间-上次任务执行时间 > 60s
-            while (taskQueue_.size() == 0)
+            while (isPoolRunning_ && taskQueue_.size() == 0)
             {
                 if (poolMode_ == PoolMode::MODE_CACHED)
                 {
@@ -173,15 +173,20 @@ void ThreadPool::threadFunc(int threadId)
                     // 等待任务队列不为空
                     notEmpty_.wait(lock);
                 }
-
-                if (!isPoolRunning_)
-                {
-                    // 回收线程
-                    threads_.erase(threadId);
-                    std::cout << "threadFunc " << std::this_thread::get_id() << " 回收线程" << std::endl;
-                    exitCond_.notify_all();
-                    return;
-                }
+                // 这里不需要判断了，因为外面while循环已经判断了，然后会进入到break，
+                // if (!isPoolRunning_)
+                // {
+                //     // 回收线程
+                //     threads_.erase(threadId);
+                //     std::cout << "threadFunc " << std::this_thread::get_id() << " 回收线程" << std::endl;
+                //     exitCond_.notify_all();
+                //     return;
+                // }
+            }
+        
+            if (!isPoolRunning_)
+            {
+                break;
             }
 
             idleThreadSize_--;

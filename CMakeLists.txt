@@ -11,7 +11,7 @@ set(CMAKE_CXX_STANDARD 20)
 # 添加源文件
 set(SOURCES
         main.cpp
-        threadpool.cpp
+        threadpool.cc
 )
 
 
