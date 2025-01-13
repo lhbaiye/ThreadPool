@@ -138,7 +138,7 @@ void ThreadPool::start(int initThreadSize)
 void ThreadPool::threadFunc(int threadId)
 {
     auto lastTime = std::chrono::high_resolution_clock().now();
-    while (isPoolRunning_)
+    while (true)
     {
         std::shared_ptr<Task> task;
         {
@@ -149,8 +149,17 @@ void ThreadPool::threadFunc(int threadId)
 
             // 超过initThreadSize_的线程数量需要回收
             // 当前时间-上次任务执行时间 > 60s
-            while (isPoolRunning_ && taskQueue_.size() == 0)
+            while (taskQueue_.size() == 0)
             {
+                if (!isPoolRunning_)
+                {
+                    // 回收线程
+                    threads_.erase(threadId);
+
+                    std::cout << "threadFunc " << std::this_thread::get_id() << " 回收线程" << std::endl;
+                    exitCond_.notify_all();
+                    return;
+                }
                 if (poolMode_ == PoolMode::MODE_CACHED)
                 {
                     // 条件变量超时返回
@@ -183,11 +192,6 @@ void ThreadPool::threadFunc(int threadId)
                 //     return;
                 // }
             }
-        
-            if (!isPoolRunning_)
-            {
-                break;
-            }
 
             idleThreadSize_--;
 
@@ -218,11 +222,6 @@ void ThreadPool::threadFunc(int threadId)
         lastTime = std::chrono::high_resolution_clock().now(); // 更新线程执行完的时间
         idleThreadSize_++;
     }
-    // 回收线程
-    threads_.erase(threadId);
-
-    std::cout << "threadFunc " << std::this_thread::get_id() << " 回收线程" << std::endl;
-    exitCond_.notify_all();
 }
 
 /// @brief 线程函数
