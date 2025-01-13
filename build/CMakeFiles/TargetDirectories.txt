@@ -1,0 +1,3 @@
+/Users/chenxuyang/workspace/ccode/threadpools/ThreadPool/build/CMakeFiles/main.dir
+/Users/chenxuyang/workspace/ccode/threadpools/ThreadPool/build/CMakeFiles/edit_cache.dir
+/Users/chenxuyang/workspace/ccode/threadpools/ThreadPool/build/CMakeFiles/rebuild_cache.dir
