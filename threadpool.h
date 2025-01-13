@@ -8,6 +8,7 @@
 #include <condition_variable>
 #include <functional>
 #include <map>
+#include <thread>
 
 class Any
 {
@@ -63,11 +64,18 @@ private:
 class Semaphore
 {
 public:
-    Semaphore(int resLimit = 0) : resLimit_(resLimit) {}
-    ~Semaphore() = default;
+    Semaphore(int resLimit = 0) : resLimit_(resLimit), isExit_(false) {}
+    ~Semaphore()
+    {
+        isExit_ = true;
+    }
     // 获取一个信号量资源
     void wait()
     {
+        if (isExit_)
+        {
+            return;
+        }
         std::unique_lock<std::mutex> lock(mtx_);
         // 等待信号量有资源，没有的话阻塞
         cond_.wait(lock, [this]()
@@ -77,12 +85,17 @@ public:
     // 增加一个信号量资源
     void post()
     {
+        if (isExit_)
+        {
+            return;
+        }
         std::unique_lock<std::mutex> lock(mtx_);
         resLimit_++;
         cond_.notify_all();
     }
 
 private:
+    std::atomic_bool isExit_;
     std::mutex mtx_;
     std::condition_variable cond_;
     int resLimit_;
